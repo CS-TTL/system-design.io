@@ -14,7 +14,7 @@
 12. **12-Factor App Principles** `[Basic -> Advanced]`
 
 ### **Domain 2: Networking and Communication**
-1. **OSI Model and TCP/IP Fundamentals** `[Basic]` (./OSI-Model-and-TCP-IP-Fundamentals.html)
+1. [**OSI Model and TCP/IP Fundamentals** ](./OSI-Model-and-TCP-IP-Fundamentals.html)
 2. **DNS Resolution:** TTL, Anycast `[Basic -> Advanced]`
 3. **HTTP Evolution:** HTTP/1.1 vs. HTTP/2 vs. HTTP/3 (QUIC) `[Basic -> Expert]`
 4. **TLS and mTLS Fundamentals** `[Advanced -> Expert]`
