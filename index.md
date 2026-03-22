@@ -1,3 +1,7 @@
+---
+layout: default
+title: Topics for System Design
+---
 
 ### **Domain 1: Foundations and Core Concepts**
 1. **What is System Design?** Goals, constraints, and trade-offs `[Basic]`
