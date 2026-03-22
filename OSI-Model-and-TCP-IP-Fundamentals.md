@@ -1,3 +1,7 @@
+---
+layout: default
+title: OSI Model and TCP/IP Fundamentals
+---
 
 # OSI Model and TCP/IP Fundamentals
 
