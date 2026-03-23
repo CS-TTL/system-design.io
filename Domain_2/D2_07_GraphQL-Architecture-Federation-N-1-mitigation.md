@@ -105,9 +105,9 @@ These four problems are not theoretical. They are why Netflix, Shopify, GitHub, 
 
 ## Part 4 — GraphQL Federation: The Architecture
 
-GraphQL Federation (popularized by Apollo in 2019 and now being standardized by the GraphQL Foundation) solves the monolith's four problems by splitting the graph into **independently owned services called subgraphs**, each with their own schema, database, and deployment pipeline.[^2]
+GraphQL Federation (popularized by Apollo in 2019 and now being standardized by the GraphQL Foundation) solves the monolith's four problems by splitting the graph into **independently owned services called subgraphs**, each with their own schema, database, and deployment pipeline.
 
-A specialized orchestration layer — the **Gateway** (or **Router**) — presents one unified schema to the client (the **supergraph**), while routing query execution to the correct subgraphs behind the scenes.[^3]
+A specialized orchestration layer — the **Gateway** (or **Router**) — presents one unified schema to the client (the **supergraph**), while routing query execution to the correct subgraphs behind the scenes.
 
 ```svgbob
                     +------------------+
@@ -132,13 +132,13 @@ A specialized orchestration layer — the **Gateway** (or **Router**) — presen
       User DB      Product DB       Orders DB
 ```
 
-*Figure 2: The federated architecture. Notice the client sees only one endpoint. The Gateway handles all routing decisions. Each subgraph owns its own schema, logic, and data store.*[^3]
+*Figure 2: The federated architecture. Notice the client sees only one endpoint. The Gateway handles all routing decisions. Each subgraph owns its own schema, logic, and data store.*
 
 ***
 
 ### 4.1 — Subgraphs: The Department Buildings
 
-A **subgraph** is a standard GraphQL service with one crucial addition: it is **federation-aware**. It declares which types and fields it owns and exposes a special `_entities` query that allows the Gateway to stitch cross-service data together.[^4]
+A **subgraph** is a standard GraphQL service with one crucial addition: it is **federation-aware**. It declares which types and fields it owns and exposes a special `_entities` query that allows the Gateway to stitch cross-service data together.
 
 ```python
 # users_subgraph/schema.py
@@ -173,7 +173,7 @@ The `@key(fields: "id")` directive is the lynchpin. It says: *"The User type is 
 
 ### 4.2 — Schema Composition: The Supergraph
 
-Each subgraph publishes its schema. The **schema composition** process merges all subgraph schemas into one unified **supergraph schema** — run via Apollo GraphOS or the Rover CLI.[^5]
+Each subgraph publishes its schema. The **schema composition** process merges all subgraph schemas into one unified **supergraph schema** — run via Apollo GraphOS or the Rover CLI.
 
 ```python
 # products_subgraph — owns the base Product type
@@ -216,7 +216,7 @@ This is federation's killer feature: **the Reviews team extended the `Product` t
 
 ### 4.3 — The Gateway \& Query Planning
 
-The Gateway is where the real intelligence lives. When a client sends a query, the Gateway runs a **query planner** that builds a **directed acyclic graph (DAG)** of fetch operations and executes them, potentially in parallel.[^3]
+The Gateway is where the real intelligence lives. When a client sends a query, the Gateway runs a **query planner** that builds a **directed acyclic graph (DAG)** of fetch operations and executes them, potentially in parallel.
 
 Let us trace a real query:
 
@@ -243,7 +243,7 @@ Let us trace a real query:
 +------------------------------------------+
 ```
 
-*Figure 3: The query execution plan forms a dependency chain. Notice how the Gateway uses `_entities` — the special federated query — to fetch cross-service data using only the entity's key fields.*[^6]
+*Figure 3: The query execution plan forms a dependency chain. Notice how the Gateway uses `_entities` — the special federated query — to fetch cross-service data using only the entity's key fields.*
 
 ***
 
@@ -331,7 +331,7 @@ Let us visualize the database activity this generates:
   +--------+
       |
       +-- Post[^0].author --> SELECT * FROM users WHERE id='u1'
-      +-- Post.author --> SELECT * FROM users WHERE id='u2'
+      +-- Post[^1].author --> SELECT * FROM users WHERE id='u2'
       +-- Post[^2].author --> SELECT * FROM users WHERE id='u1'  (DUPLICATE!)
       +-- Post[^3].author --> SELECT * FROM users WHERE id='u3'
       +-- ...
@@ -350,7 +350,7 @@ With 50 posts this might be tolerable. With 500 posts at 10ms per database round
 
 ### 5.3 — DataLoader: The Standard Fix
 
-The solution was formalized by Facebook's Lee Byron in 2015 with the **DataLoader** pattern. The core insight is beautifully simple:[^7]
+The solution was formalized by Facebook's Lee Byron in 2015 with the **DataLoader** pattern. The core insight is beautifully simple:
 
 > **Collect all the keys you need within a single "tick" of the event loop, then fetch them all in one batch.**
 
@@ -381,7 +381,7 @@ DataLoader operates as a two-phase system:
   Total DB Queries: 1 + 1 = 2  (instead of 1 + 50)
 ```
 
-*Figure 5: DataLoader's two-phase operation. All `load()` calls within a single event loop tick are batched into one DB call. Duplicate keys (u1 appears twice) are deduplicated automatically.*[^8]
+*Figure 5: DataLoader's two-phase operation. All `load()` calls within a single event loop tick are batched into one DB call. Duplicate keys (u1 appears twice) are deduplicated automatically.*
 
 ```python
 # dataloader_setup.py
@@ -409,13 +409,13 @@ async def resolve_post_author(post, info):
     return await info.context["user_loader"].load(post["author_id"])
 ```
 
-The interface is identical. The performance impact is dramatic: 51 queries become 2.[^7]
+The interface is identical. The performance impact is dramatic: 51 queries become 2.
 
 ***
 
 ### 5.4 — The "Same Order" Contract: The Most Common DataLoader Bug
 
-There is one rule that DataLoader beginners consistently get wrong. **The batch function must return results in the exact same order as the input keys, and must return exactly the same number of results.** If your database returns results sorted differently, your DataLoader will silently return wrong data — mapping User B's data to User A's post.[^7]
+There is one rule that DataLoader beginners consistently get wrong. **The batch function must return results in the exact same order as the input keys, and must return exactly the same number of results.** If your database returns results sorted differently, your DataLoader will silently return wrong data — mapping User B's data to User A's post.
 
 ```python
 # ❌ BROKEN: DB returns users sorted by name, not by input order
@@ -438,7 +438,7 @@ We recommend writing a unit test specifically for this behavior in any productio
 
 ### 5.5 — DataLoader Caching: Per-Request Memoization
 
-DataLoader includes a **per-request memoization cache**. If `loader.load("u1")` is called five times in one request, the batch function only receives `"u1"` once.[^6]
+DataLoader includes a **per-request memoization cache**. If `loader.load("u1")` is called five times in one request, the batch function only receives `"u1"` once.
 
 **Important:** DataLoader caches are scoped per request. You must create a **new DataLoader instance for every incoming GraphQL request**. Sharing a DataLoader across requests causes stale data — User A's request would see User B's cached records. This is why we create the loader inside `create_request_context()`, not as a module-level singleton.
 
@@ -446,11 +446,11 @@ DataLoader includes a **per-request memoization cache**. If `loader.load("u1")` 
 
 ## Part 6 — The Distributed N+1: Federation's Specific Challenge
 
-In a monolithic GraphQL server, DataLoader solves N+1 at the database layer. In a federated system, there is a second layer where N+1 can occur: **between the Gateway and subgraphs**. This is the distributed N+1 — and it is meaner than the original.[^9]
+In a monolithic GraphQL server, DataLoader solves N+1 at the database layer. In a federated system, there is a second layer where N+1 can occur: **between the Gateway and subgraphs**. This is the distributed N+1 — and it is meaner than the original.
 
 ### 6.1 — How Distributed N+1 Occurs
 
-A naive Gateway, after fetching 100 orders from the Orders subgraph, might call the Users subgraph **100 times** — once per order. Each "query" is now a **network hop across a service boundary**, not just a DB query.[^9]
+A naive Gateway, after fetching 100 orders from the Orders subgraph, might call the Users subgraph **100 times** — once per order. Each "query" is now a **network hop across a service boundary**, not just a DB query.
 
 ```svgbob
   Gateway fetches 100 orders from Orders Subgraph (1 network call)
@@ -458,7 +458,7 @@ A naive Gateway, after fetching 100 orders from the Orders subgraph, might call 
        v
   For each order (naive execution):
     order[^0].user -> HTTP POST to Users Subgraph
-    order.user -> HTTP POST to Users Subgraph
+    order[^1].user -> HTTP POST to Users Subgraph
     order[^2].user -> HTTP POST to Users Subgraph
     ...
     order[^99].user -> HTTP POST to Users Subgraph
@@ -474,7 +474,7 @@ A naive Gateway, after fetching 100 orders from the Orders subgraph, might call 
 
 ### 6.2 — Entity Batching: Federation's Built-In Solution
 
-Apollo Federation's query planner solves this through **entity batching** via the `_entities` query. The Gateway collects all user IDs from all 100 orders, then makes **one call** to the Users subgraph with a list of entity representations.[^6]
+Apollo Federation's query planner solves this through **entity batching** via the `_entities` query. The Gateway collects all user IDs from all 100 orders, then makes **one call** to the Users subgraph with a list of entity representations.
 
 ```python
 # What the Gateway sends to Users subgraph (one call for all 100 users):
@@ -495,7 +495,7 @@ variables = {
 }
 ```
 
-For this to work efficiently, our Users subgraph must implement `__resolveReference` with its own DataLoader:[^6]
+For this to work efficiently, our Users subgraph must implement `__resolveReference` with its own DataLoader:
 
 ```python
 # users_subgraph/resolvers.py — production-grade
@@ -613,7 +613,7 @@ async def resolve_shipping_cost(product, info):
 
 ### 7.3 — Persisted Queries: Caching the Query Plan
 
-For high-traffic systems, the Gateway's query planning step itself can become overhead. **Persisted queries** allow clients to send a hash of the query; the Gateway caches the parsed and planned query, skipping the planning step on repeat requests entirely.[^10]
+For high-traffic systems, the Gateway's query planning step itself can become overhead. **Persisted queries** allow clients to send a hash of the query; the Gateway caches the parsed and planned query, skipping the planning step on repeat requests entirely.
 
 ```python
 # client-side APQ (Automatic Persisted Queries)
@@ -649,11 +649,11 @@ Hiring managers at top-tier companies rarely ask you to write DataLoader from sc
 
 **"What happens when a subgraph goes down in federation?"** — The Gateway can be configured with `@defer` to return partial results. Design your supergraph so a Reviews subgraph failure does not block a user from seeing their Order total. Resilient federation means treating non-critical subgraphs as optional.
 
-**"How do you handle schema evolution without breaking clients?"** — Use `@override` for safe field migration. The Inventory team adds the field with `@override(from: "products")`, both versions coexist temporarily during traffic migration, then Products removes the field. Zero downtime. Zero client changes.[^2]
+**"How do you handle schema evolution without breaking clients?"** — Use `@override` for safe field migration. The Inventory team adds the field with `@override(from: "products")`, both versions coexist temporarily during traffic migration, then Products removes the field. Zero downtime. Zero client changes.
 
-**"When would you NOT use federation?"** — Small teams (fewer than 3–4 services) should not adopt federation. The operational overhead — schema registry, separate deployments, composition tooling, distributed tracing — is not justified until your team size makes the monolith's coordination costs exceed federation's infrastructure costs. A 5-person startup should not be running a federated graph.[^11]
+**"When would you NOT use federation?"** — Small teams (fewer than 3–4 services) should not adopt federation. The operational overhead — schema registry, separate deployments, composition tooling, distributed tracing — is not justified until your team size makes the monolith's coordination costs exceed federation's infrastructure costs. A 5-person startup should not be running a federated graph.
 
-**"How is DataLoader different from a cache?"** — DataLoader's per-request cache is scoped and ephemeral — it exists only for one GraphQL request's lifetime. It prevents redundant fetches *within* one request. It is not a replacement for Redis or a CDN cache, which persist across requests. DataLoader is a **deduplication and batching tool**, not a persistence strategy.[^8]
+**"How is DataLoader different from a cache?"** — DataLoader's per-request cache is scoped and ephemeral — it exists only for one GraphQL request's lifetime. It prevents redundant fetches *within* one request. It is not a replacement for Redis or a CDN cache, which persist across requests. DataLoader is a **deduplication and batching tool**, not a persistence strategy.
 
 ***
 

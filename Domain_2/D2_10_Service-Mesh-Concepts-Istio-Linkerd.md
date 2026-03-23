@@ -13,7 +13,7 @@ That is what microservices look like without a service mesh.
 
 In a monolith, one function calls another and the runtime does the hard part for free. In microservices, that same call becomes a network request, and networks are unreliable, slow, and full of failure modes. A service mesh exists to take the messy, repetitive, high-risk parts of service-to-service communication and move them into infrastructure.
 
-Istio and Linkerd are the two names most often discussed in this space. They solve the same general problem, but they do it with different philosophies. Istio emphasizes breadth and control; Linkerd emphasizes simplicity and efficiency.[^2][^3]
+Istio and Linkerd are the two names most often discussed in this space. They solve the same general problem, but they do it with different philosophies. Istio emphasizes breadth and control; Linkerd emphasizes simplicity and efficiency.
 
 ***
 
@@ -30,7 +30,7 @@ That creates a few classic failures:
 - A third service sends plaintext traffic because someone forgot to configure TLS.
 - A fourth service is impossible to debug because no one can trace the request path.
 
-A service mesh solves this by moving those concerns out of application code and into a shared networking layer.[^4][^5]
+A service mesh solves this by moving those concerns out of application code and into a shared networking layer.
 
 ### What a mesh actually is
 
@@ -96,7 +96,7 @@ Every service mesh has two conceptual halves.
 
 ### Data plane
 
-This is the part that actually handles traffic. In Istio, the data plane is usually Envoy proxies. In Linkerd, it is the Linkerd proxy written in Rust.[^2][^6][^7]
+This is the part that actually handles traffic. In Istio, the data plane is usually Envoy proxies. In Linkerd, it is the Linkerd proxy written in Rust.
 
 The data plane is where live requests flow. If Service A calls Service B, the request typically passes through A’s proxy and B’s proxy.
 
@@ -126,17 +126,17 @@ The core interview insight here is simple: **the mesh is not a new application f
 
 ## Istio: the feature-rich mesh
 
-Istio is the heavyweight option. It was created by Google, IBM, and Lyft and uses Envoy as its data-plane proxy. It is powerful, widely used, and designed for teams that need deep traffic control and advanced policy enforcement.[^6]
+Istio is the heavyweight option. It was created by Google, IBM, and Lyft and uses Envoy as its data-plane proxy. It is powerful, widely used, and designed for teams that need deep traffic control and advanced policy enforcement.
 
 ### Why Istio became important
 
 Istio emerged because large microservice systems needed fine-grained traffic management and security that plain Kubernetes could not provide. It became especially attractive in organizations that wanted sophisticated routing, traffic shaping, and zero-trust enforcement.
 
-Earlier Istio releases had several separate control-plane components. Modern Istio consolidates much of that into `istiod`, which simplified operations significantly. That simplification is worth remembering because it reflects a broader theme in platform engineering: powerful systems tend to accumulate complexity unless someone actively refactors them.[^6]
+Earlier Istio releases had several separate control-plane components. Modern Istio consolidates much of that into `istiod`, which simplified operations significantly. That simplification is worth remembering because it reflects a broader theme in platform engineering: powerful systems tend to accumulate complexity unless someone actively refactors them.
 
 ### The Envoy foundation
 
-Istio’s data plane is built on Envoy. Envoy is a general-purpose high-performance proxy with dynamic configuration support via xDS. That means Istio can push new routes, policies, and endpoints to proxies without restarting workloads.[^6]
+Istio’s data plane is built on Envoy. Envoy is a general-purpose high-performance proxy with dynamic configuration support via xDS. That means Istio can push new routes, policies, and endpoints to proxies without restarting workloads.
 
 For interview purposes, the key point is this: Istio is expressive because Envoy is expressive.
 
@@ -166,12 +166,12 @@ The key resources are:
 - `VirtualService`: defines routing behavior.
 - `DestinationRule`: defines policies applied to destinations.
 - `Gateway`: manages ingress and egress at the mesh edge.
-- `ServiceEntry`: registers external services into mesh policy.[^6]
+- `ServiceEntry`: registers external services into mesh policy.
 
 
 ### Security
 
-Istio supports mutual TLS, which means both sides of a connection prove their identity. This is a zero-trust model: every service must authenticate, even if it is inside the cluster.[^6]
+Istio supports mutual TLS, which means both sides of a connection prove their identity. This is a zero-trust model: every service must authenticate, even if it is inside the cluster.
 
 Istio’s control plane can issue and rotate certificates automatically. In practice, that means you can encrypt internal service traffic without making each application manage certificates on its own.
 
@@ -189,13 +189,13 @@ That gives operators visibility into request rates, error rates, and latency acr
 
 ## Linkerd: the simplicity-first mesh
 
-Linkerd takes a different path. It focuses on being lightweight, easy to operate, and narrow in scope. The modern Linkerd 2.x architecture uses a custom proxy written in Rust rather than Envoy.[^7][^8][^2]
+Linkerd takes a different path. It focuses on being lightweight, easy to operate, and narrow in scope. The modern Linkerd 2.x architecture uses a custom proxy written in Rust rather than Envoy.
 
 That choice is not accidental. It reflects a philosophy: if your goal is a service mesh, do not build a general-purpose proxy and then adapt it. Build a proxy that exists only to serve the mesh.
 
 ### Why Rust matters
 
-Linkerd’s proxy is written in Rust for memory safety, predictable latency, and a smaller resource footprint. That makes it attractive for teams that care about per-pod overhead and operational simplicity.[^8][^7]
+Linkerd’s proxy is written in Rust for memory safety, predictable latency, and a smaller resource footprint. That makes it attractive for teams that care about per-pod overhead and operational simplicity.
 
 The strategic idea is this:
 
@@ -206,7 +206,7 @@ That makes Linkerd easier to reason about in many production environments.
 
 ### Linkerd control plane
 
-Linkerd’s control plane is intentionally compact. It usually includes:[^2]
+Linkerd’s control plane is intentionally compact. It usually includes:
 
 - **Destination**: service discovery and routing policy.
 - **Identity**: certificate issuance and workload identity.
@@ -217,7 +217,7 @@ This is much easier to explain in interviews than a long list of specialized fea
 
 ### Automatic mTLS
 
-Like Istio, Linkerd provides automatic mutual TLS. The important difference is that Linkerd emphasizes zero-config behavior. Once a namespace is meshed, traffic is encrypted and authenticated with little extra ceremony.[^3][^2]
+Like Istio, Linkerd provides automatic mutual TLS. The important difference is that Linkerd emphasizes zero-config behavior. Once a namespace is meshed, traffic is encrypted and authenticated with little extra ceremony.
 
 ### ServiceProfiles and retry budgets
 
@@ -320,7 +320,7 @@ Both Istio and Linkerd are service meshes, but they are built for different kind
 | Best for | Complex enterprise routing | Teams wanting ease and low overhead |
 | Learning curve | Steeper | Gentler |
 
-Istio is the better choice when you need advanced routing, traffic engineering, or highly customized policy. Linkerd is often the better choice when you want a mesh that is fast to understand and cheap to operate.[^9][^3]
+Istio is the better choice when you need advanced routing, traffic engineering, or highly customized policy. Linkerd is often the better choice when you want a mesh that is fast to understand and cheap to operate.
 
 This is not about “which is better” in the abstract. It is about which trade-off your team is making.
 
@@ -330,7 +330,7 @@ This is not about “which is better” in the abstract. It is about which trade
 
 Sidecars solve a real problem, but they also create real overhead. Every pod gets a proxy. That means more CPU, more memory, more complexity, and more rollout surface area.
 
-Istio’s ambient mesh was created to address that pain. In ambient mode, Istio splits responsibilities between node-level and service-level components rather than placing a proxy inside every pod.[^10][^11][^12]
+Istio’s ambient mesh was created to address that pain. In ambient mode, Istio splits responsibilities between node-level and service-level components rather than placing a proxy inside every pod.
 
 ### The new shape
 
@@ -361,11 +361,11 @@ The architectural lesson is broader than Istio itself: platform teams constantly
 
 ### What problem does a service mesh solve?
 
-A service mesh centralizes service-to-service networking concerns such as routing, retries, timeouts, mTLS, and observability. It removes duplicated logic from application code and applies policies consistently across services.[^5][^4]
+A service mesh centralizes service-to-service networking concerns such as routing, retries, timeouts, mTLS, and observability. It removes duplicated logic from application code and applies policies consistently across services.
 
 ### What is the difference between the control plane and the data plane?
 
-The data plane handles live traffic. The control plane computes configuration and pushes it to the proxies. The control plane does not sit on the request path.[^2][^6]
+The data plane handles live traffic. The control plane computes configuration and pushes it to the proxies. The control plane does not sit on the request path.
 
 ### Why use a sidecar?
 
@@ -377,7 +377,7 @@ Each service gets a certificate from the mesh’s identity system. Proxies authe
 
 ### When would you choose Istio over Linkerd?
 
-Choose Istio when you need deep traffic policy, advanced routing, broad extensibility, and enterprise-scale control. Choose Linkerd when you want a smaller operational footprint and simpler day-two operations.[^3][^9]
+Choose Istio when you need deep traffic policy, advanced routing, broad extensibility, and enterprise-scale control. Choose Linkerd when you want a smaller operational footprint and simpler day-two operations.
 
 ***
 

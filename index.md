@@ -8,6 +8,9 @@ title: Topics for System Design
 
 https://www.youtube.com/@CSAI-TTL
 
+## Please note that this website is a work in progress; only linked content is currently available for viewing.
+
+
 ### **Domain 1: Foundations and Core Concepts**
 1. **What is System Design?** Goals, constraints, and trade-offs 
 2. **Latency vs. Throughput** 

@@ -457,7 +457,7 @@ def get_products_offset(limit: int, offset: int):
     conn.close()
 
     return [
-        {"id": r, "name": r, "price": r}[^2]
+        {"id": r, "name": r, "price": r}
         for r in rows
     ]
 ```
@@ -632,7 +632,7 @@ def list_comments(
 
     return {
         "data": [
-            {"id": r, "name": r, "created_at": r}[^2]
+            {"id": r, "name": r, "created_at": r}
             for r in items
         ],
         "pagination": {
@@ -711,10 +711,10 @@ def list_products_keyset(
     items = rows[:limit]
 
     return {
-        "data": [{"id": r, "name": r, "price": r} for r in items],[^2]
+        "data": [{"id": r, "name": r, "price": r} for r in items],
         "pagination": {
             "has_next": has_next,
-            "next_last_price": items[-1] if has_next else None,[^2]
+            "next_last_price": items[-1] if has_next else None,
             "next_last_id": items[-1] if has_next else None,
         }
     }

@@ -21,7 +21,7 @@ These three highways are HTTP/1.1, HTTP/2, and HTTP/3.  Every design decision in
 
 ## Part II — The Foundation: What Is HTTP, Really?
 
-HTTP (Hypertext Transfer Protocol) is a **stateless, application-layer protocol** that defines how messages are formatted, transmitted, and interpreted between a client (typically a browser) and a server.  It does *not* handle how data travels physically across the network (TCP/UDP), how data is encrypted in transit (TLS/SSL), or how data is routed across routers (IP). HTTP *does* handle the structure of a request and response, connection management, and semantic contracts like caching.[^2]
+HTTP (Hypertext Transfer Protocol) is a **stateless, application-layer protocol** that defines how messages are formatted, transmitted, and interpreted between a client (typically a browser) and a server.  It does *not* handle how data travels physically across the network (TCP/UDP), how data is encrypted in transit (TLS/SSL), or how data is routed across routers (IP). HTTP *does* handle the structure of a request and response, connection management, and semantic contracts like caching.
 
 ### A Brief Timeline
 
@@ -33,7 +33,7 @@ HTTP (Hypertext Transfer Protocol) is a **stateless, application-layer protocol*
 2022  HTTP/3    — QUIC over UDP, 0-RTT, per-stream loss recovery, TLS 1.3 built-in.
 ```
 
-Each version was born from a real-world pain point of its predecessor.  The pattern is consistent: adoption creates scale, scale reveals bottlenecks, bottlenecks motivate a new standard.[^3]
+Each version was born from a real-world pain point of its predecessor.  The pattern is consistent: adoption creates scale, scale reveals bottlenecks, bottlenecks motivate a new standard.
 
 ***
 
@@ -41,7 +41,7 @@ Each version was born from a real-world pain point of its predecessor.  The patt
 
 ### The Atomic Unit: One Request, One Response
 
-The most fundamental mental model in HTTP is the **request/response cycle**. In HTTP/0.9 and early HTTP/1.0, every single request required opening a brand new TCP connection, and after the response was delivered, the connection was immediately discarded. Before any data could be sent, a TCP three-way handshake had to complete:[^3]
+The most fundamental mental model in HTTP is the **request/response cycle**. In HTTP/0.9 and early HTTP/1.0, every single request required opening a brand new TCP connection, and after the response was delivered, the connection was immediately discarded. Before any data could be sent, a TCP three-way handshake had to complete:
 
 ```
 Client                          Server
@@ -61,7 +61,7 @@ Client                          Server
 
 ### Persistent Connections — The First Big Win
 
-HTTP/1.1 fixed this with **persistent connections**: once a TCP connection is established, keep it open and reuse it for multiple subsequent requests.  This became the default behavior in HTTP/1.1 — no explicit `Connection: keep-alive` header required.[^3]
+HTTP/1.1 fixed this with **persistent connections**: once a TCP connection is established, keep it open and reuse it for multiple subsequent requests.  This became the default behavior in HTTP/1.1 — no explicit `Connection: keep-alive` header required.
 
 ```
 Client                          Server
@@ -80,7 +80,7 @@ Client                          Server
 
 ### The Breaking Point: Head-of-Line Blocking
 
-HTTP/1.1 introduced **pipelining** to eliminate the idle gaps between sequential requests.  But pipelining had a fatal flaw: the server **must return responses in the exact order requests were received**. If the first request is a slow database query, every subsequent response — no matter how fast to serve — must wait in the queue.[^4]
+HTTP/1.1 introduced **pipelining** to eliminate the idle gaps between sequential requests.  But pipelining had a fatal flaw: the server **must return responses in the exact order requests were received**. If the first request is a slow database query, every subsequent response — no matter how fast to serve — must wait in the queue.
 
 ```
   ┌─────────────────────────────────────────────────────────┐
@@ -96,9 +96,9 @@ HTTP/1.1 introduced **pipelining** to eliminate the idle gaps between sequential
               Both delayed by 195ms unnecessarily
 ```
 
-*Figure 3: Head-of-Line (HOL) blocking in HTTP/1.1 pipelining. Even though icon.png and style.css could be served almost instantly, they are blocked behind the slow video. HOL blocking was so severe that all major browsers disabled pipelining and never enabled it by default. *[^4]
+*Figure 3: Head-of-Line (HOL) blocking in HTTP/1.1 pipelining. Even though icon.png and style.css could be served almost instantly, they are blocked behind the slow video. HOL blocking was so severe that all major browsers disabled pipelining and never enabled it by default. *
 
-The browser workaround: open **6 parallel TCP connections** per domain. This worked but came at a steep cost — 6 separate TCP handshakes, 6 slow-start ramp-ups, and massive server resource consumption. This is why HTTP/1.1-era best practices included **domain sharding**, **CSS spriting**, and **JS/CSS bundling** — all workarounds for a protocol that couldn't handle many small concurrent requests efficiently.[^5]
+The browser workaround: open **6 parallel TCP connections** per domain. This worked but came at a steep cost — 6 separate TCP handshakes, 6 slow-start ramp-ups, and massive server resource consumption. This is why HTTP/1.1-era best practices included **domain sharding**, **CSS spriting**, and **JS/CSS bundling** — all workarounds for a protocol that couldn't handle many small concurrent requests efficiently.
 
 ***
 
@@ -106,11 +106,11 @@ The browser workaround: open **6 parallel TCP connections** per domain. This wor
 
 ### The Problem We Are Solving
 
-By the mid-2000s, Google engineers were feeling this pain acutely. In 2009, they began experimenting with a new protocol called **SPDY** that challenged HTTP's fundamental architecture while keeping its semantics (methods, headers, status codes) intact.  SPDY introduced a new *framing layer* that transformed how HTTP semantics were transmitted. In 2015, the IETF standardized HTTP/2, drawing heavily on SPDY's design.[^3]
+By the mid-2000s, Google engineers were feeling this pain acutely. In 2009, they began experimenting with a new protocol called **SPDY** that challenged HTTP's fundamental architecture while keeping its semantics (methods, headers, status codes) intact.  SPDY introduced a new *framing layer* that transformed how HTTP semantics were transmitted. In 2015, the IETF standardized HTTP/2, drawing heavily on SPDY's design.
 
 ### The Framing Layer: Going Binary
 
-The most foundational change in HTTP/2 is that it is a **binary protocol**, not text-based. Every unit of communication is wrapped in a structured binary frame:[^5]
+The most foundational change in HTTP/2 is that it is a **binary protocol**, not text-based. Every unit of communication is wrapped in a structured binary frame:
 
 ```
 HTTP/2 Frame Structure:
@@ -134,7 +134,7 @@ HTTP/2 Frame Structure:
 
 ### Multiplexing: The Killer Feature
 
-With a single TCP connection, HTTP/2 creates *multiple virtual streams* simultaneously.  Frames from different streams can be interleaved in any order, because each frame carries its Stream ID:[^5]
+With a single TCP connection, HTTP/2 creates *multiple virtual streams* simultaneously.  Frames from different streams can be interleaved in any order, because each frame carries its Stream ID:
 
 ```
 HTTP/1.1 (serial, one request at a time):
@@ -151,11 +151,11 @@ HTTP/2 (multiplexed streams on ONE connection):
 
 *Figure 5: HTTP/2 multiplexing vs. HTTP/1.1 serial execution. Notice the large idle gaps in the HTTP/1.1 row — wasted bandwidth where the connection is open but silent. HTTP/2's three streams all execute concurrently over a single TCP connection, eliminating application-layer HOL blocking entirely.*
 
-This makes all those HTTP/1.1 workarounds **counterproductive** under HTTP/2. Domain sharding now creates *more* overhead because HTTP/2 thrives on a single well-utilized connection. CSS sprites and JS bundling hurt caching granularity — it is better to send many small cacheable files than one large uncacheable bundle.[^5]
+This makes all those HTTP/1.1 workarounds **counterproductive** under HTTP/2. Domain sharding now creates *more* overhead because HTTP/2 thrives on a single well-utilized connection. CSS sprites and JS bundling hurt caching granularity — it is better to send many small cacheable files than one large uncacheable bundle.
 
 ### HPACK Header Compression
 
-HTTP is stateless, so every request must repeat all context: host, authentication token, content type, user-agent, cookies — often 200–800 bytes of headers for a resource that might itself be 50 bytes.  HTTP/2 solves this with **HPACK**, which operates on two principles:[^3]
+HTTP is stateless, so every request must repeat all context: host, authentication token, content type, user-agent, cookies — often 200–800 bytes of headers for a resource that might itself be 50 bytes.  HTTP/2 solves this with **HPACK**, which operates on two principles:
 
 **1. Static Table**: A pre-agreed list of 61 common HTTP headers and values. Rather than sending the full string, the client sends a single-byte index.
 
@@ -205,7 +205,7 @@ req2_auth = encoder.encode_header("authorization", "Bearer eyJhbGc...")
 
 ### The Remaining Problem: TCP HOL Blocking
 
-HTTP/2 eliminated application-layer HOL blocking, but ran into the ceiling imposed by TCP itself.  TCP guarantees ordered, reliable delivery — if a packet is lost in transit, TCP requires the lost packet to be retransmitted and received before *any* subsequent data can be processed by the application layer, even data from completely unrelated streams:[^4]
+HTTP/2 eliminated application-layer HOL blocking, but ran into the ceiling imposed by TCP itself.  TCP guarantees ordered, reliable delivery — if a packet is lost in transit, TCP requires the lost packet to be retransmitted and received before *any* subsequent data can be processed by the application layer, even data from completely unrelated streams:
 
 ```
 TCP Byte Stream (carrying HTTP/2 frames from 3 streams):
@@ -224,7 +224,7 @@ TCP Byte Stream (carrying HTTP/2 frames from 3 streams):
   this — it simply sees a sudden pause in all communication.
 ```
 
-*Figure 6: TCP Head-of-Line blocking in HTTP/2. Packets 4, 5, and 6 have arrived and are ready to be processed. But the OS cannot hand them to the HTTP/2 layer until the missing packet 3 is retransmitted. From HTTP/2's perspective, all three streams are frozen — it cannot distinguish "lost packet" from "connection down."*[^4]
+*Figure 6: TCP Head-of-Line blocking in HTTP/2. Packets 4, 5, and 6 have arrived and are ready to be processed. But the OS cannot hand them to the HTTP/2 layer until the missing packet 3 is retransmitted. From HTTP/2's perspective, all three streams are frozen — it cannot distinguish "lost packet" from "connection down."*
 
 On mobile networks and Wi-Fi with 1–2% packet loss, HTTP/2 can actually perform *worse* than HTTP/1.1 — because all streams share one TCP connection and one packet loss event stalls everything, whereas HTTP/1.1's 6 separate connections mean only 1/6 of downloads are blocked at any given time.
 
@@ -234,13 +234,13 @@ On mobile networks and Wi-Fi with 1–2% packet loss, HTTP/2 can actually perfor
 
 ### The QUIC Origin Story
 
-Around 2012–2013, Google engineers began building something radical: rather than patching TCP, they decided to rebuild the transport layer from scratch — on top of UDP — in **user space**.  This protocol, **QUIC** (Quick UDP Internet Connections), reimplements everything valuable about TCP (reliability, flow control, congestion control) while surgically removing its problematic features (strictly ordered byte stream, monolithic connection state).[^6]
+Around 2012–2013, Google engineers began building something radical: rather than patching TCP, they decided to rebuild the transport layer from scratch — on top of UDP — in **user space**.  This protocol, **QUIC** (Quick UDP Internet Connections), reimplements everything valuable about TCP (reliability, flow control, congestion control) while surgically removing its problematic features (strictly ordered byte stream, monolithic connection state).
 
-QUIC was deployed on Google's properties from 2015. By 2017 it was serving roughly 7% of global internet traffic. The IETF standardized QUIC in 2021 (RFC 9000) and HTTP/3 in 2022 (RFC 9114).  As of 2025, HTTP/3 runs on approximately 30% of websites globally.[^7][^6]
+QUIC was deployed on Google's properties from 2015. By 2017 it was serving roughly 7% of global internet traffic. The IETF standardized QUIC in 2021 (RFC 9000) and HTTP/3 in 2022 (RFC 9114).  As of 2025, HTTP/3 runs on approximately 30% of websites globally.
 
 ### QUIC Architecture: Independent Streams All the Way Down
 
-The critical architectural insight in QUIC is that **independent streams are implemented at the transport layer**, not just the application layer.  In HTTP/2 over TCP, streams are a logical construct inside HTTP — but the underlying TCP byte stream is still one continuous ordered sequence shared by all streams. QUIC inverts this: its transport layer natively understands streams, each with its own independent flow control and loss recovery:[^4]
+The critical architectural insight in QUIC is that **independent streams are implemented at the transport layer**, not just the application layer.  In HTTP/2 over TCP, streams are a logical construct inside HTTP — but the underlying TCP byte stream is still one continuous ordered sequence shared by all streams. QUIC inverts this: its transport layer natively understands streams, each with its own independent flow control and loss recovery:
 
 ```
 QUIC Connection (over UDP):
@@ -259,11 +259,11 @@ QUIC Connection (over UDP):
   +-------------------------------------------+
 ```
 
-*Figure 7: QUIC's per-stream loss recovery. When a packet carrying Stream 2 data is lost, only Stream 2 pauses for retransmission. Streams 1 and 3 continue delivering data to the application layer without interruption. This is the fundamental improvement over HTTP/2-over-TCP, where a single lost packet would stall all three streams simultaneously.*[^6]
+*Figure 7: QUIC's per-stream loss recovery. When a packet carrying Stream 2 data is lost, only Stream 2 pauses for retransmission. Streams 1 and 3 continue delivering data to the application layer without interruption. This is the fundamental improvement over HTTP/2-over-TCP, where a single lost packet would stall all three streams simultaneously.*
 
 ### Connection Establishment: 0-RTT
 
-We can see the handshake savings directly in a side-by-side comparison:[^7]
+We can see the handshake savings directly in a side-by-side comparison:
 
 ```
 HTTP/1.1 (HTTPS):                    HTTP/3 (QUIC):
@@ -284,17 +284,17 @@ Client        Server                 Client        Server
   Total: 3 RTT before data
 ```
 
-*Figure 8: Connection establishment comparison. HTTPS/1.1 requires a TCP handshake (1 RTT) then a TLS handshake (1 RTT) before sending the first HTTP request — 3 RTT total. HTTP/3 collapses the transport and cryptographic handshakes into a single QUIC step. On reconnection to a known server, QUIC achieves 0-RTT by embedding the first HTTP/3 request in the very first packet using a cached TLS 1.3 session ticket.*[^8]
+*Figure 8: Connection establishment comparison. HTTPS/1.1 requires a TCP handshake (1 RTT) then a TLS handshake (1 RTT) before sending the first HTTP request — 3 RTT total. HTTP/3 collapses the transport and cryptographic handshakes into a single QUIC step. On reconnection to a known server, QUIC achieves 0-RTT by embedding the first HTTP/3 request in the very first packet using a cached TLS 1.3 session ticket.*
 
-**Security note on 0-RTT**: 0-RTT data is vulnerable to **replay attacks** — an attacker capturing and re-sending a `POST /checkout` packet could trigger duplicate state changes. The mitigation is to restrict 0-RTT to idempotent methods (GET, HEAD) and return a `425 Too Early` status for state-changing 0-RTT requests.[^9]
+**Security note on 0-RTT**: 0-RTT data is vulnerable to **replay attacks** — an attacker capturing and re-sending a `POST /checkout` packet could trigger duplicate state changes. The mitigation is to restrict 0-RTT to idempotent methods (GET, HEAD) and return a `425 Too Early` status for state-changing 0-RTT requests.
 
 ### Built-in TLS 1.3: Encryption Is Not Optional
 
-HTTP/3 makes encryption final and unambiguous: **QUIC mandates TLS 1.3**.  The TLS handshake is baked into the QUIC handshake — they happen simultaneously, not sequentially. Even QUIC headers themselves are encrypted (except for the connection ID), making it harder for middleboxes (corporate firewalls, ISPs) to inspect and interfere with QUIC traffic.[^2][^6]
+HTTP/3 makes encryption final and unambiguous: **QUIC mandates TLS 1.3**.  The TLS handshake is baked into the QUIC handshake — they happen simultaneously, not sequentially. Even QUIC headers themselves are encrypted (except for the connection ID), making it harder for middleboxes (corporate firewalls, ISPs) to inspect and interfere with QUIC traffic.
 
 ### Connection Migration
 
-One of the most practically valuable features of HTTP/3 is **connection migration** — the ability to maintain a session even as the underlying network path changes.  Under TCP, the IP:port tuple *is* the connection identifier. Change your IP (e.g., Wi-Fi → 4G), and your TCP connection is dead. QUIC identifies connections by a **Connection ID** — a randomly generated number decoupled from the network address:[^7]
+One of the most practically valuable features of HTTP/3 is **connection migration** — the ability to maintain a session even as the underlying network path changes.  Under TCP, the IP:port tuple *is* the connection identifier. Change your IP (e.g., Wi-Fi → 4G), and your TCP connection is dead. QUIC identifies connections by a **Connection ID** — a randomly generated number decoupled from the network address:
 
 ```python
 from dataclasses import dataclass
@@ -332,9 +332,9 @@ conn.migrate_network("10.42.81.203")  # Mobile 4G
 
 ### Why Not Just Fix TCP?
 
-A fair question: why build QUIC on UDP rather than extending TCP? The answer is **ossification**.  TCP is implemented in OS kernels — modifying it requires kernel updates across billions of devices. More critically, middleboxes around the internet (routers, NATs, firewalls, load balancers) have been tuned for TCP for decades, performing sequence number validation and dropping packets that look "wrong." Any change to TCP's observable wire format would break on some fraction of networks.[^8]
+A fair question: why build QUIC on UDP rather than extending TCP? The answer is **ossification**.  TCP is implemented in OS kernels — modifying it requires kernel updates across billions of devices. More critically, middleboxes around the internet (routers, NATs, firewalls, load balancers) have been tuned for TCP for decades, performing sequence number validation and dropping packets that look "wrong." Any change to TCP's observable wire format would break on some fraction of networks.
 
-UDP is a thin primitive — just a checksum and port numbers. Building QUIC in user-space means it can be updated as quickly as a software library, without waiting for OS vendor updates, and sidesteps middlebox ossification entirely.[^8]
+UDP is a thin primitive — just a checksum and port numbers. Building QUIC in user-space means it can be updated as quickly as a software library, without waiting for OS vendor updates, and sidesteps middlebox ossification entirely.
 
 ***
 
@@ -377,7 +377,7 @@ HTTP/1.1 Stack:          HTTP/2 Stack:            HTTP/3 Stack:
 | **Server Push** | No | Yes (deprecated) | No |
 | **Standardized** | 1997 | 2015 | 2022 |
 
-[^2][^6][^5]
+
 
 ***
 
@@ -482,7 +482,7 @@ for label, times in [("HTTP/1.1", http1_times),
 # HTTP/3     Avg load time: 183.7ms
 ```
 
-Running this simulation reveals the consistent pattern: HTTP/2's multiplexing delivers meaningful gains over HTTP/1.1, but under 2% packet loss, the TCP HOL penalty pulls it back. HTTP/3's per-stream loss recovery keeps the critical path clean.[^2]
+Running this simulation reveals the consistent pattern: HTTP/2's multiplexing delivers meaningful gains over HTTP/1.1, but under 2% packet loss, the TCP HOL penalty pulls it back. HTTP/3's per-stream loss recovery keeps the critical path clean.
 
 ### The Alt-Svc Discovery Mechanism
 
@@ -507,7 +507,7 @@ print(detect_http_version_support(example_headers))
 # → "HTTP/3 available — h3=":443"; ma=86400, h3-29=":443"; ma=86400"
 ```
 
-This is how HTTP/3 is discovered in the wild.  Browsers do not automatically know if a server supports HTTP/3 — the first connection always starts with HTTP/1.1 or HTTP/2. If the server supports HTTP/3, it returns `Alt-Svc` in the response headers. The browser caches this and uses HTTP/3 on the *next* request to the same host.[^8]
+This is how HTTP/3 is discovered in the wild.  Browsers do not automatically know if a server supports HTTP/3 — the first connection always starts with HTTP/1.1 or HTTP/2. If the server supports HTTP/3, it returns `Alt-Svc` in the response headers. The browser caches this and uses HTTP/3 on the *next* request to the same host.
 
 ***
 
@@ -517,23 +517,22 @@ This is how HTTP/3 is discovered in the wild.  Browsers do not automatically kno
 
 **Q: Explain HOL blocking and how each HTTP version handles it.**
 
-*Model Answer*: HOL blocking occurs when a slow item at the front of a queue blocks all items behind it.[^10]
+*Model Answer*: HOL blocking occurs when a slow item at the front of a queue blocks all items behind it.
 
 - **HTTP/1.1**: Has application-layer HOL via pipelining (disabled in practice) and transport-layer HOL via TCP. Workaround: 6 parallel connections.
-- **HTTP/2**: Fixes application-layer HOL with multiplexed binary streams. TCP-layer HOL remains — a single lost packet stalls *all* streams.[^4]
-- **HTTP/3**: Fixes *both* by implementing streams at the QUIC/transport layer. A lost packet only pauses its own stream; others continue unaffected.[^6]
+- **HTTP/2**: Fixes application-layer HOL with multiplexed binary streams. TCP-layer HOL remains — a single lost packet stalls *all* streams.
+- **HTTP/3**: Fixes *both* by implementing streams at the QUIC/transport layer. A lost packet only pauses its own stream; others continue unaffected.
 
 ***
 
 **Q: Why is HTTP/3 built on UDP if UDP is unreliable?**
 
-*Model Answer*: QUIC re-implements reliability, ordering, and flow control *per stream* on top of UDP. UDP's "unreliability" is intentional — QUIC doesn't want TCP's ordered monolithic byte stream. It wants independent stream reliability. UDP is simply a minimal primitive that lets QUIC build exactly the semantics it needs without inheriting TCP's problematic constraints. Additionally, building in user-space on UDP allows QUIC to be updated like a software library, bypassing the OS kernel update cycle.[^8]
+*Model Answer*: QUIC re-implements reliability, ordering, and flow control *per stream* on top of UDP. UDP's "unreliability" is intentional — QUIC doesn't want TCP's ordered monolithic byte stream. It wants independent stream reliability. UDP is simply a minimal primitive that lets QUIC build exactly the semantics it needs without inheriting TCP's problematic constraints. Additionally, building in user-space on UDP allows QUIC to be updated like a software library, bypassing the OS kernel update cycle.
 
 ***
 
 **Q: What HTTP/1.1 optimizations become anti-patterns in HTTP/2?**
 
-*Model Answer*:[^5]
 
 - **Domain sharding**: Creates multiple TCP connections, defeating HTTP/2's single-connection multiplexing advantage
 - **CSS/JS bundling**: Reduces caching granularity; HTTP/2 efficiently handles many small files
@@ -553,11 +552,11 @@ This is how HTTP/3 is discovered in the wild.  Browsers do not automatically kno
 | Real-time streaming (video, VOIP) | HTTP/3 (connection migration + low HOL) |
 | CDN edge-to-browser traffic | HTTP/3 (max benefit at the "last mile") |
 
-[^6]
+
 
 ### Staff/Senior Level Concepts
 
-**QUIC and Load Balancers**: Traditional load balancers route based on TCP's IP:port tuple. QUIC's Connection IDs break this model — QUIC-aware load balancers (NGINX with QUIC support, Envoy, Cloudflare's infrastructure) must inspect Connection IDs in QUIC packet headers to route sessions correctly.[^9]
+**QUIC and Load Balancers**: Traditional load balancers route based on TCP's IP:port tuple. QUIC's Connection IDs break this model — QUIC-aware load balancers (NGINX with QUIC support, Envoy, Cloudflare's infrastructure) must inspect Connection IDs in QUIC packet headers to route sessions correctly.
 
 **ALPN Negotiation**: During the TLS handshake, the browser includes an `ALPN extension` in its `ClientHello` offering `["h2", "http/1.1"]`. The server selects `h2` if it supports it, or falls back to `http/1.1`. This is how HTTP/2 is negotiated transparently — no separate round-trip needed. HTTP/3 uses `Alt-Svc` for discovery instead, since its TLS handshake is part of QUIC.
 

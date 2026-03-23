@@ -131,7 +131,7 @@ The key takeaway here: DHTs allow P2P networks to locate any piece of data — o
 
 Here is where our courier analogy gets interesting. Alice wants to send a letter directly to Bob. But Bob doesn't have a publicly visible address — he lives in a gated community (a private network), and the community has a single shared mailbox at the gate (the NAT device). Letters come in, but the gatekeeper only allows replies to mail that Bob initiated outward. Bob cannot receive unsolicited mail from Alice.
 
-This is the **Network Address Translation (NAT) problem** — the single biggest technical challenge in P2P networking.[^2]
+This is the **Network Address Translation (NAT) problem** — the single biggest technical challenge in P2P networking.
 
 NAT was invented in the 1990s as a clever workaround for the fact that IPv4 only supports ~4 billion unique addresses. By allowing millions of private devices to share a single public IP, NAT extended the life of IPv4 by decades. But it fundamentally broke the end-to-end connectivity principle of the original internet.
 
@@ -150,7 +150,7 @@ NAT was invented in the 1990s as a clever workaround for the fact that IPv4 only
 
 ### The Four Faces of NAT
 
-NAT routers are not all the same. Their behavior determines how hard — or impossible — it is to punch through:[^3]
+NAT routers are not all the same. Their behavior determines how hard — or impossible — it is to punch through:
 
 
 | NAT Type | Behavior | P2P Difficulty |
@@ -160,7 +160,7 @@ NAT routers are not all the same. Their behavior determines how hard — or impo
 | **Port-Restricted Cone** | Accepts inbound only from exact IP:port combination Alice contacted | Hard |
 | **Symmetric** | Creates a new mapping for every different destination | Very Hard |
 
-The nightmare scenario for P2P engineers is when **both peers are behind Symmetric NAT**. In this case, the external port is unpredictable and different for every destination — making hole-punching nearly impossible without a relay.[^3]
+The nightmare scenario for P2P engineers is when **both peers are behind Symmetric NAT**. In this case, the external port is unpredictable and different for every destination — making hole-punching nearly impossible without a relay.
 
 ***
 
@@ -168,7 +168,7 @@ The nightmare scenario for P2P engineers is when **both peers are behind Symmetr
 
 ### UDP Hole Punching
 
-The most elegant hack in networking is **UDP hole punching**. The insight: when a device sends an outbound UDP packet, the NAT creates a temporary mapping (a "hole") that allows inbound packets from that same destination IP:port for a short window.[^4]
+The most elegant hack in networking is **UDP hole punching**. The insight: when a device sends an outbound UDP packet, the NAT creates a temporary mapping (a "hole") that allows inbound packets from that same destination IP:port for a short window.
 
 The strategy:
 
@@ -198,7 +198,7 @@ The strategy:
 
 ### STUN: Your Public Address Mirror
 
-**STUN (Session Traversal Utilities for NAT, RFC 5389)** is a standardized protocol that automates the "What is my public IP?" step. A peer sends a STUN request to a public STUN server, which simply reflects the peer's public IP and port back.[^5]
+**STUN (Session Traversal Utilities for NAT, RFC 5389)** is a standardized protocol that automates the "What is my public IP?" step. A peer sends a STUN request to a public STUN server, which simply reflects the peer's public IP and port back.
 
 ```python
 import socket
@@ -227,11 +227,11 @@ def send_stun_request() -> tuple[str, int]:
     return public_ip, public_port
 ```
 
-STUN is cheap — it uses a tiny public server that simply echoes your address back. Most WebRTC deployments use Google's free STUN servers (`stun.l.google.com`). **The limitation:** STUN only works when hole-punching is possible. When both peers are behind Symmetric NAT, STUN cannot establish a direct connection.[^6]
+STUN is cheap — it uses a tiny public server that simply echoes your address back. Most WebRTC deployments use Google's free STUN servers (`stun.l.google.com`). **The limitation:** STUN only works when hole-punching is possible. When both peers are behind Symmetric NAT, STUN cannot establish a direct connection.
 
 ### TURN: The Relay Fallback
 
-When hole-punching fails, we need a relay. **TURN (Traversal Using Relays around NAT, RFC 5766)** servers act as explicit media relays — all traffic flows through them.[^7]
+When hole-punching fails, we need a relay. **TURN (Traversal Using Relays around NAT, RFC 5766)** servers act as explicit media relays — all traffic flows through them.
 
 ```svgbob
   Peer A         TURN Server          Peer B
@@ -251,17 +251,17 @@ When hole-punching fails, we need a relay. **TURN (Traversal Using Relays around
   Higher latency, but guaranteed connectivity.
 ```
 
-TURN is expensive to operate (all bandwidth passes through it), but it is the **safety net** that makes WebRTC work even in the most restrictive enterprise networks. Typically, only 15–20% of WebRTC connections need TURN.[^6]
+TURN is expensive to operate (all bandwidth passes through it), but it is the **safety net** that makes WebRTC work even in the most restrictive enterprise networks. Typically, only 15–20% of WebRTC connections need TURN.
 
 ### ICE: The Grand Unifier
 
-**ICE (Interactive Connectivity Establishment, RFC 8445)** is the algorithm that orchestrates STUN and TURN into a coherent strategy. It systematically tests all possible connection paths and selects the best one. ICE gathers a list of **candidates** — potential connection addresses — and ranks them:[^7]
+**ICE (Interactive Connectivity Establishment, RFC 8445)** is the algorithm that orchestrates STUN and TURN into a coherent strategy. It systematically tests all possible connection paths and selects the best one. ICE gathers a list of **candidates** — potential connection addresses — and ranks them:
 
 1. **Host candidates** — Direct local network addresses (lowest latency, ideal)
 2. **Server-reflexive candidates** — Public IP:port discovered via STUN
 3. **Relay candidates** — TURN relay addresses (fallback)
 
-Once both peers exchange their candidate lists, ICE runs **connectivity checks** — sending STUN binding requests over every candidate pair. The first pair that succeeds becomes the **nominated pair**, and media flows through it.[^4]
+Once both peers exchange their candidate lists, ICE runs **connectivity checks** — sending STUN binding requests over every candidate pair. The first pair that succeeds becomes the **nominated pair**, and media flows through it.
 
 ```python
 from dataclasses import dataclass
@@ -307,7 +307,7 @@ def calculate_ice_priority(
 
 ### What WebRTC Is (and What It Is Not)
 
-**WebRTC (Web Real-Time Communication)** is an open standard (originally from Google, standardized by the W3C and IETF) that gives browsers and native applications the ability to establish direct P2P connections for audio, video, and arbitrary data — **without any plugins**.[^8]
+**WebRTC (Web Real-Time Communication)** is an open standard (originally from Google, standardized by the W3C and IETF) that gives browsers and native applications the ability to establish direct P2P connections for audio, video, and arbitrary data — **without any plugins**.
 
 WebRTC is not a single protocol. It is a **collection of protocols and APIs** wired together into a coherent system:
 
@@ -341,7 +341,7 @@ WebRTC is not a single protocol. It is a **collection of protocols and APIs** wi
 
 Here is the famous paradox of WebRTC: **two peers cannot negotiate a connection without first having a connection.** You need a communication channel to set up the communication channel.
 
-This is the **signaling problem**, and WebRTC deliberately does **not** solve it. It is intentionally left to the developer. You can use WebSockets, HTTP long-polling, carrier pigeon — anything that can carry text messages between two peers before the P2P connection is established.[^9]
+This is the **signaling problem**, and WebRTC deliberately does **not** solve it. It is intentionally left to the developer. You can use WebSockets, HTTP long-polling, carrier pigeon — anything that can carry text messages between two peers before the P2P connection is established.
 
 A typical signaling server is surprisingly simple:
 
@@ -385,7 +385,7 @@ Notice that the signaling server is a **thin relay** — it only passes messages
 
 ### SDP: The Negotiation Blueprint
 
-When two WebRTC peers are about to connect, they need to agree on a common set of capabilities — codecs, resolution, bitrate, and connection addresses. This negotiation uses **SDP (Session Description Protocol, RFC 4566)** — a text format that describes a multimedia session.[^10]
+When two WebRTC peers are about to connect, they need to agree on a common set of capabilities — codecs, resolution, bitrate, and connection addresses. This negotiation uses **SDP (Session Description Protocol, RFC 4566)** — a text format that describes a multimedia session.
 
 ```
 v=0
@@ -404,7 +404,7 @@ a=candidate:2 1 UDP 1694498815 203.0.113.45 54321 typ srflx
 
 ### The Offer/Answer Dance
 
-The complete WebRTC connection sequence is a beautifully choreographed exchange:[^11]
+The complete WebRTC connection sequence is a beautifully choreographed exchange:
 
 ```svgbob
   Alice (Caller)              Signaling Server           Bob (Callee)
@@ -432,7 +432,7 @@ The complete WebRTC connection sequence is a beautifully choreographed exchange:
        │           (signaling server no longer involved)       │
 ```
 
-Steps 8 onward use **Trickle ICE** — candidates are sent as they are discovered, rather than waiting for all candidates before starting. This dramatically reduces connection time.[^9]
+Steps 8 onward use **Trickle ICE** — candidates are sent as they are discovered, rather than waiting for all candidates before starting. This dramatically reduces connection time.
 
 ### The Python Perspective: aiortc
 
@@ -473,7 +473,7 @@ WebRTC exposes three primary browser APIs. Each one solves a distinct problem.
 
 ### 1. `getUserMedia` — Capturing the World
 
-`getUserMedia` is the entry point for accessing the user's camera and microphone. It requires a secure context (HTTPS) and returns a `MediaStream` — a container of `MediaStreamTrack` objects.[^8]
+`getUserMedia` is the entry point for accessing the user's camera and microphone. It requires a secure context (HTTPS) and returns a `MediaStream` — a container of `MediaStreamTrack` objects.
 
 ```python
 # Python equivalent using OpenCV (simulates camera capture)
@@ -522,7 +522,7 @@ class MediaStreamTrack:
 
 ### 3. `RTCDataChannel` — P2P Data Pipes
 
-`RTCDataChannel` is WebRTC's most underappreciated feature. It allows peers to send arbitrary binary or text data directly over the P2P connection — no server involved — making it ideal for collaborative apps, multiplayer games, and file transfers.[^12]
+`RTCDataChannel` is WebRTC's most underappreciated feature. It allows peers to send arbitrary binary or text data directly over the P2P connection — no server involved — making it ideal for collaborative apps, multiplayer games, and file transfers.
 
 Data channels support flexible delivery modes:
 
@@ -576,11 +576,11 @@ class RTCDataChannelSimulator:
 
 ### The Non-Negotiable: Mandatory Encryption
 
-Unlike many networking protocols where security is optional, **WebRTC mandates encryption**. You cannot turn it off. Every WebRTC connection uses two security protocols working in tandem:[^13]
+Unlike many networking protocols where security is optional, **WebRTC mandates encryption**. You cannot turn it off. Every WebRTC connection uses two security protocols working in tandem:
 
-**DTLS (Datagram Transport Layer Security)** is the UDP-friendly cousin of TLS. It handles the initial key exchange between peers. Before any media flows, peers perform a DTLS handshake to establish shared encryption keys.[^13]
+**DTLS (Datagram Transport Layer Security)** is the UDP-friendly cousin of TLS. It handles the initial key exchange between peers. Before any media flows, peers perform a DTLS handshake to establish shared encryption keys.
 
-**SRTP (Secure Real-Time Transport Protocol, RFC 3711)** uses the keys established by DTLS to encrypt every single media packet. Even if an attacker intercepts packets in transit, they are meaningless without the decryption keys.[^14]
+**SRTP (Secure Real-Time Transport Protocol, RFC 3711)** uses the keys established by DTLS to encrypt every single media packet. Even if an attacker intercepts packets in transit, they are meaningless without the decryption keys.
 
 ```svgbob
   DTLS-SRTP Key Exchange Flow:
@@ -605,7 +605,7 @@ Unlike many networking protocols where security is optional, **WebRTC mandates e
 
 ### Certificate Fingerprint Verification: Defeating MITM
 
-The genius of WebRTC's security is this: the **DTLS certificate fingerprint is embedded in the SDP**. When peers exchange SDPs through the signaling server, each SDP contains a hash like `a=fingerprint:sha-256 AB:CD:EF:...`. During the DTLS handshake, each peer verifies that the certificate presented matches the fingerprint in the SDP. If a man-in-the-middle tries to intercept and re-encrypt the traffic, they would present a certificate that does not match — and the connection is immediately rejected.[^15]
+The genius of WebRTC's security is this: the **DTLS certificate fingerprint is embedded in the SDP**. When peers exchange SDPs through the signaling server, each SDP contains a hash like `a=fingerprint:sha-256 AB:CD:EF:...`. During the DTLS handshake, each peer verifies that the certificate presented matches the fingerprint in the SDP. If a man-in-the-middle tries to intercept and re-encrypt the traffic, they would present a certificate that does not match — and the connection is immediately rejected.
 
 ```python
 import hashlib, ssl
@@ -674,19 +674,19 @@ Let us now trace the complete journey from "Alice clicks Call" to "Alice hears B
 ### Core Concepts You Must Articulate
 
 **Q: What is the difference between STUN and TURN?**
-STUN is a discovery protocol that helps a peer learn its own public IP:port. TURN is a relay protocol that forwards media through a server when direct P2P is impossible. STUN is cheap and used first; TURN is the expensive fallback.[^7]
+STUN is a discovery protocol that helps a peer learn its own public IP:port. TURN is a relay protocol that forwards media through a server when direct P2P is impossible. STUN is cheap and used first; TURN is the expensive fallback.
 
 **Q: What does ICE actually do?**
-ICE gathers all possible connection candidates (host, STUN-reflexive, TURN-relay), exchanges them with the remote peer, systematically tests every candidate pair with STUN binding requests, and selects the highest-priority working path. It handles the entire NAT traversal strategy automatically.[^4]
+ICE gathers all possible connection candidates (host, STUN-reflexive, TURN-relay), exchanges them with the remote peer, systematically tests every candidate pair with STUN binding requests, and selects the highest-priority working path. It handles the entire NAT traversal strategy automatically.
 
 **Q: Why does WebRTC use UDP instead of TCP for media?**
 TCP's retransmission-on-loss guarantee is actually harmful for real-time media. If an audio packet is lost, retransmitting it 200ms later is useless — the codec would rather fill the gap with comfort noise. UDP's "fire and forget" model tolerates packet loss gracefully, mapping perfectly to real-time audio/video codecs like Opus and VP8.
 
 **Q: What is the signaling server's role, and why doesn't WebRTC define one?**
-The signaling server relays SDP offers/answers and ICE candidates between peers before the P2P connection is established. WebRTC deliberately leaves this undefined because different applications have vastly different signaling needs — SIP, custom JSON over WebSockets, message queues — and the W3C committee wisely avoided standardizing something that varied too widely.[^9]
+The signaling server relays SDP offers/answers and ICE candidates between peers before the P2P connection is established. WebRTC deliberately leaves this undefined because different applications have vastly different signaling needs — SIP, custom JSON over WebSockets, message queues — and the W3C committee wisely avoided standardizing something that varied too widely.
 
 **Q: Explain the WebRTC security model.**
-WebRTC mandates DTLS for key exchange and SRTP for media encryption. The DTLS certificate fingerprint is embedded in the SDP. When peers exchange SDPs, they commit to accepting only a connection whose DTLS certificate matches that fingerprint — making man-in-the-middle attacks detectable even if the signaling channel is compromised.[^15]
+WebRTC mandates DTLS for key exchange and SRTP for media encryption. The DTLS certificate fingerprint is embedded in the SDP. When peers exchange SDPs, they commit to accepting only a connection whose DTLS certificate matches that fingerprint — making man-in-the-middle attacks detectable even if the signaling channel is compromised.
 
 **Q: How does a DHT scale better than a centralized tracker?**
 A centralized tracker is a single point of failure and a bandwidth bottleneck. A DHT distributes the responsibility across all nodes — each node maintains only $O(\log N)$ routing entries, and any lookup completes in $O(\log N)$ hops. Removing any node only disrupts lookups that routed through it, and the network self-heals.
@@ -696,14 +696,14 @@ A centralized tracker is a single point of failure and a bandwidth bottleneck. A
 | Component | Protocol | Purpose |
 | :-- | :-- | :-- |
 | Peer discovery | Kademlia DHT | Finding peers without a central server  |
-| Address discovery | STUN (RFC 5389) | Discovering public IP:port behind NAT [^5] |
-| Media relay | TURN (RFC 5766) | Fallback when direct P2P fails [^7] |
-| Path selection | ICE (RFC 8445) | Choosing the best connection path [^6] |
-| Session negotiation | SDP + Offer/Answer | Agreeing on codecs and capabilities [^10] |
-| Key exchange | DTLS | Securing the handshake [^13] |
-| Media encryption | SRTP | Encrypting audio/video packets [^14] |
-| Data transport | SCTP over DTLS | Reliable/unreliable data channels [^12] |
-| Media capture | getUserMedia API | Accessing camera/microphone [^8] |
+| Address discovery | STUN (RFC 5389) | Discovering public IP:port behind NAT  |
+| Media relay | TURN (RFC 5766) | Fallback when direct P2P fails  |
+| Path selection | ICE (RFC 8445) | Choosing the best connection path  |
+| Session negotiation | SDP + Offer/Answer | Agreeing on codecs and capabilities  |
+| Key exchange | DTLS | Securing the handshake  |
+| Media encryption | SRTP | Encrypting audio/video packets  |
+| Data transport | SCTP over DTLS | Reliable/unreliable data channels  |
+| Media capture | getUserMedia API | Accessing camera/microphone  |
 | Connection management | RTCPeerConnection | Orchestrating the entire WebRTC lifecycle |
 
 
