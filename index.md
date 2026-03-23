@@ -8,7 +8,7 @@ title: Topics for System Design
 
 https://www.youtube.com/@CSAI-TTL
 
-<span style="color:orange; font-size:18px">Please note that this website is a work in progress; only linked content is currently available for viewing.
+<span style="color:red; font-size:20px">Please note that this website is a work in progress; only linked content is currently available for viewing.
 </span>
 
 ### **Domain 1: Foundations and Core Concepts**
